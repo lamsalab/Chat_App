@@ -32,6 +32,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.content.Intent;
+import android.net.Uri;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
@@ -41,6 +42,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,9 +72,11 @@ public class MainActivity extends AppCompatActivity {
     private ChildEventListener mChildEventListener;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+    private FirebaseStorage mFirebaseStorage;
+    private StorageReference mChatPhotoStorageReference;
 
     public static final int RC_SIGN_IN = 1;
-
+    public static final int RC_PHOTO_PICKER = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAuth = FirebaseAuth.getInstance();
 
         mMessagesDatabaseReference = mFirebaseDatabase.getReference().child("messages");
+        mChatPhotoStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -101,7 +109,10 @@ public class MainActivity extends AppCompatActivity {
         mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Fire an intent to show an image picker
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("images/jpeg");
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                startActivityForResult(intent, RC_PHOTO_PICKER);
             }
         });
 
@@ -174,6 +185,16 @@ public class MainActivity extends AppCompatActivity {
             else if (resultCode == RESULT_CANCELED){
                 Toast.makeText(this, "Sign In cancelled", Toast.LENGTH_SHORT);
                 finish();
+            }
+            else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK){
+                Uri selectedImageURI =  data.getData();
+                StorageReference photoRef = mChatPhotoStorageReference.child(selectedImageURI.getLastPathSegment());
+                photoRef.putFile(selectedImageURI).addOnSuccessListener(this, new onSuccessListener<UploadTask.TaskSnapshot>(){
+
+
+                }
+
+
             }
         }
     }
